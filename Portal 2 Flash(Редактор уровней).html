@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Редактор уровней</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #222;
+            font-family: Arial, sans-serif;
+            overflow: hidden;
+            flex-direction: column;
+        }
+
+        #editor-grid {
+            display: grid;
+            grid-template-columns: repeat(15, 40px);
+            grid-template-rows: repeat(15, 40px);
+            gap: 2px;
+            margin-bottom: 20px;
+        }
+
+        .cell {
+            width: 40px;
+            height: 40px;
+            background-color: #555;
+            border: 1px solid #444;
+            cursor: pointer;
+        }
+
+        .cell.player {
+            background-color: #ffffff;
+            border-radius: 50%;
+        }
+
+        .cell.cube {
+            background-color: #00ccff;
+        }
+
+        .cell.button {
+            background-color: #ffcc00;
+        }
+
+        .cell.franken-turret {
+            background-color: #00ccff;
+            border-radius: 50%;
+        }
+
+        .cell.coin {
+            background-color: #ffff00;
+            border-radius: 50%;
+        }
+
+        .cell.trap {
+            background-color: #ff0000;
+        }
+
+        .cell.teleport {
+            background-color: #0000ff;
+            border-radius: 50%;
+        }
+
+        .cell.obstacle {
+            background-color: #808080;
+        }
+
+        button {
+            margin: 10px;
+            padding: 10px 20px;
+            font-size: 16px;
+            background-color: #444;
+            color: #fff;
+            border: none;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #555;
+        }
+    </style>
+</head>
+<body>
+    <h1>Редактор уровней</h1>
+    <div id="editor-grid"></div>
+    <button onclick="placeObject('player')">Игрок</button>
+    <button onclick="placeObject('cube')">Куб</button>
+    <button onclick="placeObject('button')">Кнопка</button>
+    <button onclick="placeObject('franken-turret')">Франкен-турель</button>
+    <button onclick="placeObject('coin')">Монетка</button>
+    <button onclick="placeObject('trap')">Ловушка</button>
+    <button onclick="placeObject('teleport')">Телепорт</button>
+    <button onclick="placeObject('obstacle')">Препятствие</button>
+    <button onclick="exportLevel()">Экспорт уровня</button>
+
+    <script>
+        const editorGrid = [];
+        const levelSize = 15;
+        let selectedObject = null;
+
+        // Инициализация сетки редактора
+        function initializeEditorGrid() {
+            const editorGridElement = document.getElementById('editor-grid');
+            editorGridElement.innerHTML = '';
+            editorGrid.length = 0;
+
+            for (let y = 0; y < levelSize; y++) {
+                for (let x = 0; x < levelSize; x++) {
+                    const cell = document.createElement('div');
+                    cell.className = 'cell';
+                    cell.dataset.x = x;
+                    cell.dataset.y = y;
+                    cell.addEventListener('click', () => placeObjectOnGrid(x, y));
+                    editorGridElement.appendChild(cell);
+                    editorGrid.push({ x, y, type: null });
+                }
+            }
+        }
+
+        // Выбор объекта для размещения
+        function placeObject(type) {
+            selectedObject = type;
+        }
+
+        // Размещение объекта на сетке
+        function placeObjectOnGrid(x, y) {
+            if (selectedObject) {
+                const cell = editorGrid.find(cell => cell.x === x && cell.y === y);
+                if (cell) {
+                    cell.type = selectedObject;
+                    const cellElement = document.querySelector(`.cell[data-x="${x}"][data-y="${y}"]`);
+                    cellElement.className = 'cell';
+                    cellElement.classList.add(selectedObject);
+                }
+            }
+        }
+
+        // Экспорт уровня в JSON
+        function exportLevel() {
+            const levelData = editorGrid
+                .filter(cell => cell.type !== null)
+                .map(cell => ({
+                    x: cell.x,
+                    y: cell.y,
+                    type: cell.type,
+                    letter: cell.type === 'cube' || cell.type === 'button' ? 'A' : null, // Пример буквы
+                    isBonus: cell.type === 'coin' ? Math.random() < 0.2 : null // Пример бонусной монетки
+                }));
+
+            const json = JSON.stringify(levelData, null, 2);
+            const blob = new Blob([json], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'level.json';
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        // Инициализация редактора при загрузке
+        initializeEditorGrid();
+    </script>
+</body>
+</html>

@@ -1,0 +1,764 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>2D Игра: Кубики и Франкен-турели</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #222;
+            font-family: Arial, sans-serif;
+            overflow: hidden;
+            flex-direction: column;
+        }
+
+        #main-menu {
+            text-align: center;
+            color: #fff;
+        }
+
+        #main-menu h1 {
+            font-size: 40px;
+            margin-bottom: 20px;
+        }
+
+        #main-menu button {
+            margin: 10px;
+            padding: 10px 20px;
+            font-size: 16px;
+            background-color: #444;
+            color: #fff;
+            border: none;
+            cursor: pointer;
+        }
+
+        #main-menu button:hover {
+            background-color: #555;
+        }
+
+        #settings-menu, #instructions {
+            display: none;
+            margin-top: 20px;
+            color: #fff;
+        }
+
+        #settings-menu label {
+            display: block;
+            margin: 10px 0;
+        }
+
+        #game-container {
+            position: relative;
+            width: 600px;
+            height: 600px;
+            background-color: #333;
+            border: 2px solid #444;
+            display: grid;
+            grid-template-columns: repeat(15, 1fr);
+            grid-template-rows: repeat(15, 1fr);
+            display: none; /* Скрываем игровое поле по умолчанию */
+        }
+
+        .cell {
+            width: 100%;
+            height: 100%;
+            background-color: #555;
+            border: 1px solid #444;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+        }
+
+        .player {
+            background-color: #ffffff;
+            border-radius: 50%;
+            width: 80%;
+            height: 80%;
+        }
+
+        .button {
+            background-color: #ffcc00;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 20px;
+            font-weight: bold;
+            color: #000;
+        }
+
+        .button.activated {
+            background-color: #00ff00;
+        }
+
+        .cube {
+            background-color: #00ccff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 20px;
+            font-weight: bold;
+            color: #000;
+        }
+
+        .obstacle {
+            background-color: #808080;
+        }
+
+        .coin {
+            background-color: #ffff00;
+            border-radius: 50%;
+            width: 60%;
+            height: 60%;
+        }
+
+        .bonus-coin {
+            background-color: #ffa500;
+            border-radius: 50%;
+            width: 60%;
+            height: 60%;
+        }
+
+        .trap {
+            background-color: #ff0000;
+            position: relative;
+            border-radius: 50%;
+        }
+
+        .trap::before, .trap::after {
+            content: '';
+            position: absolute;
+            width: 0;
+            height: 0;
+            border-left: 10px solid transparent;
+            border-right: 10px solid transparent;
+            border-bottom: 15px solid #ff0000;
+        }
+
+        .trap::before {
+            top: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        .trap::after {
+            bottom: -10px;
+            left: 50%;
+            transform: translateX(-50%) rotate(180deg);
+        }
+
+        .teleport {
+            background-color: #0000ff;
+            border-radius: 50%;
+            width: 80%;
+            height: 60%;
+            position: relative;
+            box-shadow: 0 0 10px #00ffff, 0 0 20px #00ffff;
+        }
+
+        .teleport::before {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border: 2px solid #00ffff;
+            border-radius: 50%;
+            animation: glow 2s infinite;
+        }
+
+        @keyframes glow {
+            0% {
+                box-shadow: 0 0 5px #00ffff, 0 0 10px #00ffff;
+            }
+            50% {
+                box-shadow: 0 0 20px #00ffff, 0 0 40px #00ffff;
+            }
+            100% {
+                box-shadow: 0 0 5px #00ffff, 0 0 10px #00ffff;
+            }
+        }
+
+        #next-level-button {
+            margin-top: 20px;
+            padding: 10px 20px;
+            font-size: 16px;
+            background-color: #444;
+            color: #fff;
+            border: none;
+            cursor: pointer;
+        }
+
+        #next-level-button:disabled {
+            background-color: #777;
+            cursor: not-allowed;
+        }
+
+        #hint {
+            margin-top: 10px;
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 16px;
+        }
+
+        #shop {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: #444;
+            padding: 20px;
+            border: 2px solid #fff;
+            color: #fff;
+            display: none;
+        }
+
+        #coin-counter {
+            margin-top: 10px;
+            color: #fff;
+            font-size: 20px;
+        }
+
+        #lives-counter {
+            margin-top: 10px;
+            color: #fff;
+            font-size: 20px;
+        }
+
+        #timer {
+            margin-top: 10px;
+            color: #fff;
+            font-size: 20px;
+        }
+
+        .franken-turret {
+            background-color: #00ccff;
+            border-radius: 50%;
+            width: 80%;
+            height: 80%;
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 20px;
+            font-weight: bold;
+            color: #000;
+        }
+
+        .franken-turret::before {
+            content: '';
+            position: absolute;
+            width: 30%;
+            height: 30%;
+            background-color: #ff0000;
+            border-radius: 50%;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        .bullet {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background-color: #ffff00;
+            border-radius: 50%;
+            animation: bulletMove 1s linear;
+        }
+
+        @keyframes bulletMove {
+            0% {
+                transform: scale(1);
+            }
+            100% {
+                transform: scale(0);
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Главное меню -->
+    <div id="main-menu">
+        <h1>2D Игра: Кубики и Франкен-турели</h1>
+        <button onclick="startGame()">Начать игру</button>
+        <button onclick="showSettings()">Настройки</button>
+        <button onclick="showInstructions()">Инструкция</button>
+    </div>
+
+    <!-- Меню настроек -->
+    <div id="settings-menu">
+        <h2>Настройки</h2>
+        <label>
+            Количество жизней:
+            <input type="number" id="lives-setting" min="1" max="10" value="3">
+        </label>
+        <label>
+            Время на уровень (секунды):
+            <input type="number" id="time-setting" min="30" max="300" value="60">
+        </label>
+        <button onclick="applySettings()">Применить</button>
+        <button onclick="hideSettings()">Назад</button>
+    </div>
+
+    <!-- Инструкция -->
+    <div id="instructions">
+        <h2>Инструкция</h2>
+        <p>
+            <strong>Цель игры:</strong> Активируйте все кнопки, разместив на них кубы с соответствующими буквами.
+        </p>
+        <p>
+            <strong>Управление:</strong>
+            <ul>
+                <li><strong>W / Стрелка вверх</strong> — двигаться вверх.</li>
+                <li><strong>S / Стрелка вниз</strong> — двигаться вниз.</li>
+                <li><strong>A / Стрелка влево</strong> — двигаться влево.</li>
+                <li><strong>D / Стрелка вправо</strong> — двигаться вправо.</li>
+                <li><strong>Q</strong> — открыть магазин.</li>
+                <li><strong>E</strong> — использовать супер-куб.</li>
+            </ul>
+        </p>
+        <p>
+            <strong>Цвета и механики:</strong>
+            <ul>
+                <li><strong style="color: #00ccff;">Синий куб</strong> — подберите его и положите на кнопку.</li>
+                <li><strong style="color: #ffcc00;">Оранжевая кнопка</strong> — активируется, если на неё положить куб с такой же буквой.</li>
+                <li><strong style="color: #00ccff;">Франкен-турель</strong> — передвигается по полю, её нельзя уничтожить.</li>
+                <li><strong style="color: #ffff00;">Жёлтая монетка</strong> — даёт 1 монету.</li>
+                <li><strong style="color: #ffa500;">Оранжевая монетка</strong> — даёт 5 монет.</li>
+                <li><strong style="color: #ff0000;">Красная ловушка</strong> — отнимает жизнь.</li>
+                <li><strong style="color: #0000ff;">Синий телепорт</strong> — перемещает игрока в случайное место.</li>
+            </ul>
+        </p>
+        <button onclick="hideInstructions()">Назад</button>
+    </div>
+
+    <!-- Игровое поле -->
+    <div id="game-container"></div>
+    <div id="coin-counter">Монетки: 0</div>
+    <div id="lives-counter">Жизни: 3</div>
+    <div id="timer">Время: 60</div>
+    <div id="hint"></div>
+    <button id="next-level-button" disabled>Следующий уровень 0/0</button>
+    <div id="shop">
+        <h2>Магазин</h2>
+        <button onclick="buySuperCube()">Супер-куб (5 монет)</button>
+        <button onclick="closeShop()">Закрыть</button>
+    </div>
+
+    <script>
+        const gameContainer = document.getElementById('game-container');
+        const nextLevelButton = document.getElementById('next-level-button');
+        const hintElement = document.getElementById('hint');
+        const coinCounter = document.getElementById('coin-counter');
+        const livesCounter = document.getElementById('lives-counter');
+        const timerElement = document.getElementById('timer');
+        const shopElement = document.getElementById('shop');
+        const mainMenu = document.getElementById('main-menu');
+        const settingsMenu = document.getElementById('settings-menu');
+        const instructions = document.getElementById('instructions');
+        const levelSize = 15;
+        let level = [];
+        let playerPosition = { x: 0, y: 0 };
+        let cubes = [];
+        let buttons = [];
+        let playerInventory = [];
+        let coins = [];
+        let traps = [];
+        let teleports = [];
+        let frankenTurrets = [];
+        let bullets = [];
+        let superCubes = 0;
+        let coinCount = 0;
+        let lives = 3;
+        let currentLevel = 1;
+        let timeLeft = 60;
+        let timerInterval;
+
+        // Показ главного меню
+        function showMainMenu() {
+            mainMenu.style.display = 'block';
+            gameContainer.style.display = 'none';
+            settingsMenu.style.display = 'none';
+            instructions.style.display = 'none';
+        }
+
+        // Показ настроек
+        function showSettings() {
+            mainMenu.style.display = 'none';
+            settingsMenu.style.display = 'block';
+        }
+
+        // Скрыть настройки
+        function hideSettings() {
+            settingsMenu.style.display = 'none';
+            mainMenu.style.display = 'block';
+        }
+
+        // Применить настройки
+        function applySettings() {
+            lives = parseInt(document.getElementById('lives-setting').value);
+            timeLeft = parseInt(document.getElementById('time-setting').value);
+            livesCounter.textContent = `Жизни: ${lives}`;
+            timerElement.textContent = `Время: ${timeLeft}`;
+            hideSettings();
+        }
+
+        // Показать инструкцию
+        function showInstructions() {
+            mainMenu.style.display = 'none';
+            instructions.style.display = 'block';
+        }
+
+        // Скрыть инструкцию
+        function hideInstructions() {
+            instructions.style.display = 'none';
+            mainMenu.style.display = 'block';
+        }
+
+        // Начать игру
+        function startGame() {
+            mainMenu.style.display = 'none';
+            gameContainer.style.display = 'grid';
+            generateLevel();
+        }
+
+        // Генерация уровня
+        function generateLevel() {
+            gameContainer.innerHTML = '';
+            level = [];
+            cubes = [];
+            buttons = [];
+            playerInventory = [];
+            coins = [];
+            traps = [];
+            teleports = [];
+            frankenTurrets = [];
+            bullets = [];
+            nextLevelButton.disabled = true;
+            hintElement.textContent = '';
+            timeLeft = parseInt(document.getElementById('time-setting').value);
+            timerElement.textContent = `Время: ${timeLeft}`;
+
+            // Создаем сетку
+            for (let y = 0; y < levelSize; y++) {
+                for (let x = 0; x < levelSize; x++) {
+                    const cell = document.createElement('div');
+                    cell.className = 'cell';
+                    cell.dataset.x = x;
+                    cell.dataset.y = y;
+                    gameContainer.appendChild(cell);
+                    level.push({ x, y, element: cell });
+                }
+            }
+
+            // Размещаем игрока случайно
+            playerPosition = level[Math.floor(Math.random() * level.length)];
+            playerPosition.element.classList.add('player');
+
+            // Размещаем кнопки с буквами
+            const letters = ['К', 'Т', 'В'];
+            for (let letter of letters) {
+                const buttonCell = level[Math.floor(Math.random() * level.length)];
+                if (!buttonCell.element.classList.contains('player')) {
+                    buttonCell.element.classList.add('button');
+                    buttonCell.textContent = letter;
+                    buttons.push({ x: buttonCell.x, y: buttonCell.y, element: buttonCell.element, activated: false, letter });
+                }
+            }
+
+            // Размещаем кубы с буквами
+            for (let letter of letters) {
+                const cubeCell = level[Math.floor(Math.random() * level.length)];
+                if (!cubeCell.element.classList.contains('player') && !cubeCell.element.classList.contains('button')) {
+                    cubeCell.element.classList.add('cube');
+                    cubeCell.textContent = letter;
+                    cubes.push({ x: cubeCell.x, y: cubeCell.y, element: cubeCell.element, letter });
+                }
+            }
+
+            // Размещаем Франкен-турели
+            if (Math.random() < 0.5) {
+                const frankenTurretCell = level[Math.floor(Math.random() * level.length)];
+                if (!frankenTurretCell.element.classList.contains('player') && !frankenTurretCell.element.classList.contains('button') && !frankenTurretCell.element.classList.contains('cube')) {
+                    frankenTurretCell.element.classList.add('franken-turret');
+                    frankenTurrets.push({ x: frankenTurretCell.x, y: frankenTurretCell.y, element: frankenTurretCell.element });
+                }
+            }
+
+            // Размещаем монетки, ловушки, телепорты и препятствия
+            for (let i = 0; i < 5; i++) {
+                const coinCell = level[Math.floor(Math.random() * level.length)];
+                if (!coinCell.element.classList.contains('player') && !coinCell.element.classList.contains('button') && !coinCell.element.classList.contains('cube') && !coinCell.element.classList.contains('franken-turret')) {
+                    const coin = document.createElement('div');
+                    coin.className = Math.random() < 0.2 ? 'bonus-coin' : 'coin';
+                    coinCell.element.appendChild(coin);
+                    coins.push({ x: coinCell.x, y: coinCell.y, element: coinCell.element, isBonus: coin.className === 'bonus-coin' });
+                }
+            }
+
+            for (let i = 0; i < currentLevel; i++) {
+                const trapCell = level[Math.floor(Math.random() * level.length)];
+                if (!trapCell.element.classList.contains('player') && !trapCell.element.classList.contains('button') && !trapCell.element.classList.contains('cube') && !trapCell.element.classList.contains('franken-turret') && !trapCell.element.querySelector('.coin')) {
+                    trapCell.element.classList.add('trap');
+                    traps.push({ x: trapCell.x, y: trapCell.y, element: trapCell.element });
+                }
+            }
+
+            for (let i = 0; i < 2; i++) {
+                const teleportCell = level[Math.floor(Math.random() * level.length)];
+                if (!teleportCell.element.classList.contains('player') && !teleportCell.element.classList.contains('button') && !teleportCell.element.classList.contains('cube') && !teleportCell.element.classList.contains('franken-turret') && !teleportCell.element.classList.contains('trap') && !teleportCell.element.querySelector('.coin')) {
+                    teleportCell.element.classList.add('teleport');
+                    teleports.push({ x: teleportCell.x, y: teleportCell.y, element: teleportCell.element });
+                }
+            }
+
+            for (let i = 0; i < 5 + currentLevel; i++) {
+                const obstacleCell = level[Math.floor(Math.random() * level.length)];
+                if (!obstacleCell.element.classList.contains('player') && !obstacleCell.element.classList.contains('button') && !obstacleCell.element.classList.contains('cube') && !obstacleCell.element.classList.contains('franken-turret') && !obstacleCell.element.classList.contains('trap') && !obstacleCell.element.classList.contains('teleport') && !obstacleCell.element.querySelector('.coin')) {
+                    obstacleCell.element.classList.add('obstacle');
+                }
+            }
+
+            // Обновляем текст кнопки
+            nextLevelButton.textContent = `Следующий уровень 0/${buttons.length}`;
+
+            // Запускаем таймер
+            clearInterval(timerInterval);
+            timerInterval = setInterval(() => {
+                timeLeft--;
+                timerElement.textContent = `Время: ${timeLeft}`;
+                if (timeLeft <= 0) {
+                    clearInterval(timerInterval);
+                    alert('Время вышло! Вы проиграли.');
+                    resetGame();
+                }
+            }, 1000);
+
+            // Запускаем движение Франкен-турелей
+            moveFrankenTurrets();
+        }
+
+        // Перемещение игрока
+        function movePlayer(dx, dy) {
+            const newX = playerPosition.x + dx;
+            const newY = playerPosition.y + dy;
+
+            if (newX >= 0 && newX < levelSize && newY >= 0 && newY < levelSize) {
+                const newCell = level.find(cell => cell.x === newX && cell.y === newY);
+
+                if (!newCell.element.classList.contains('obstacle')) {
+                    // Если игрок наступает на куб, поднимаем его
+                    if (newCell.element.classList.contains('cube')) {
+                        const cubeIndex = cubes.findIndex(cube => cube.x === newX && cube.y === newY);
+                        if (cubeIndex !== -1) {
+                            cubes.splice(cubeIndex, 1);
+                            newCell.element.classList.remove('cube');
+                            playerInventory.push({ x: newX, y: newY, letter: newCell.textContent });
+                        }
+                    }
+
+                    // Если игрок наступает на кнопку и у него есть куб, активируем кнопку
+                    if (newCell.element.classList.contains('button')) {
+                        const button = buttons.find(btn => btn.x === newX && btn.y === newY);
+                        if (!button.activated && playerInventory.length > 0) {
+                            const cube = playerInventory[0]; // Берём первый куб из инвентаря
+                            button.activated = true;
+                            newCell.element.classList.add('activated');
+                            playerInventory.pop(); // Убираем куб из инвентаря
+                            updateProgress();
+                        }
+                    }
+
+                    // Если игрок наступает на монетку, собираем её
+                    if (newCell.element.querySelector('.coin') || newCell.element.querySelector('.bonus-coin')) {
+                        const coin = newCell.element.querySelector('.coin') || newCell.element.querySelector('.bonus-coin');
+                        newCell.element.removeChild(coin);
+                        coinCount += coin.classList.contains('bonus-coin') ? 5 : 1;
+                        coinCounter.textContent = `Монетки: ${coinCount}`;
+                    }
+
+                    // Если игрок наступает на ловушку, теряет жизнь
+                    if (newCell.element.classList.contains('trap')) {
+                        lives--;
+                        livesCounter.textContent = `Жизни: ${lives}`;
+                        if (lives <= 0) {
+                            alert('Вы проиграли! Нажмите ОК, чтобы начать заново.');
+                            resetGame();
+                            return;
+                        }
+                    }
+
+                    // Если игрок наступает на телепорт, перемещаем его
+                    if (newCell.element.classList.contains('teleport')) {
+                        const randomCell = level[Math.floor(Math.random() * level.length)];
+                        playerPosition.element.classList.remove('player');
+                        playerPosition = randomCell;
+                        playerPosition.element.classList.add('player');
+                        return;
+                    }
+
+                    // Перемещаем игрока
+                    playerPosition.element.classList.remove('player');
+                    playerPosition = newCell;
+                    playerPosition.element.classList.add('player');
+
+                    // Показываем подсказку, если игрок рядом с кнопкой
+                    showHint();
+                }
+            }
+        }
+
+        // Показ подсказки
+        function showHint() {
+            const nearbyButtons = buttons.filter(btn => {
+                const dx = Math.abs(btn.x - playerPosition.x);
+                const dy = Math.abs(btn.y - playerPosition.y);
+                return dx <= 1 && dy <= 1;
+            });
+
+            if (nearbyButtons.length > 0) {
+                hintElement.textContent = 'Рядом есть кнопка!';
+            } else {
+                hintElement.textContent = '';
+            }
+        }
+
+        // Обновление прогресса
+        function updateProgress() {
+            const activatedButtons = buttons.filter(btn => btn.activated).length;
+            nextLevelButton.textContent = `Следующий уровень ${activatedButtons}/${buttons.length}`;
+
+            if (activatedButtons === buttons.length) {
+                nextLevelButton.disabled = false;
+            }
+        }
+
+        // Открытие магазина
+        function openShop() {
+            shopElement.style.display = 'block';
+        }
+
+        // Закрытие магазина
+        function closeShop() {
+            shopElement.style.display = 'none';
+        }
+
+        // Покупка супер-куба
+        function buySuperCube() {
+            if (coinCount >= 5) {
+                coinCount -= 5;
+                coinCounter.textContent = `Монетки: ${coinCount}`;
+                superCubes++;
+                alert(`Вы купили супер-куб! Теперь у вас ${superCubes} супер-кубов.`);
+                closeShop();
+            } else {
+                alert('Недостаточно монет!');
+            }
+        }
+
+        // Использование супер-куба
+        function useSuperCube() {
+            if (superCubes > 0) {
+                superCubes--;
+                activateAllButtons();
+                alert('Супер-куб активировал все кнопки!');
+            } else {
+                alert('У вас нет супер-кубов!');
+            }
+        }
+
+        // Активация всех кнопок
+        function activateAllButtons() {
+            buttons.forEach(button => {
+                if (!button.activated) {
+                    button.activated = true;
+                    button.element.classList.add('activated');
+                }
+            });
+            updateProgress();
+        }
+
+        // Движение Франкен-турелей
+        function moveFrankenTurrets() {
+            frankenTurrets.forEach(turret => {
+                setInterval(() => {
+                    const directions = [
+                        { dx: 1, dy: 0 },
+                        { dx: -1, dy: 0 },
+                        { dx: 0, dy: 1 },
+                        { dx: 0, dy: -1 }
+                    ];
+
+                    const randomDirection = directions[Math.floor(Math.random() * directions.length)];
+                    const newX = turret.x + randomDirection.dx;
+                    const newY = turret.y + randomDirection.dy;
+
+                    if (newX >= 0 && newX < levelSize && newY >= 0 && newY < levelSize) {
+                        const newCell = level.find(cell => cell.x === newX && cell.y === newY);
+
+                        if (!newCell.element.classList.contains('obstacle') && !newCell.element.classList.contains('player') && !newCell.element.classList.contains('button') && !newCell.element.classList.contains('cube') && !newCell.element.classList.contains('franken-turret')) {
+                            turret.element.classList.remove('franken-turret');
+                            turret.x = newX;
+                            turret.y = newY;
+                            turret.element = newCell.element;
+                            newCell.element.classList.add('franken-turret');
+                        }
+                    }
+                }, 2000);
+            });
+        }
+
+        // Сброс игры
+        function resetGame() {
+            lives = parseInt(document.getElementById('lives-setting').value);
+            coinCount = 0;
+            superCubes = 0;
+            currentLevel = 1;
+            livesCounter.textContent = `Жизни: ${lives}`;
+            coinCounter.textContent = `Монетки: ${coinCount}`;
+            generateLevel();
+        }
+
+        // Переход на следующий уровень
+        nextLevelButton.addEventListener('click', () => {
+            currentLevel++;
+            generateLevel();
+        });
+
+        // Обработка нажатий клавиш
+        document.addEventListener('keydown', (e) => {
+            switch (e.key) {
+                case 'w':
+                case 'ArrowUp':
+                    movePlayer(0, -1);
+                    break;
+                case 's':
+                case 'ArrowDown':
+                    movePlayer(0, 1);
+                    break;
+                case 'a':
+                case 'ArrowLeft':
+                    movePlayer(-1, 0);
+                    break;
+                case 'd':
+                case 'ArrowRight':
+                    movePlayer(1, 0);
+                    break;
+                case 'q':
+                    openShop();
+                    break;
+                case 'e':
+                    useSuperCube();
+                    break;
+            }
+        });
+
+        // Показ главного меню при загрузке
+        showMainMenu();
+    </script>
+</body>
+</html>
