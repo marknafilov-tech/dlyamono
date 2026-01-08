@@ -1,1 +1,1 @@
-https://mega.nz/file/ao42CSKK#73iG2rGU0oITOrhZJ7U8_YRZnRnADzJ11mUJ21KwVtk
+Делал полтора года назад на chatgpt4-o mini, поэтому так плохо
