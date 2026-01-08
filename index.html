@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portal 2 Flash - Меню</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 800px;
+            width: 100%;
+            text-align: center;
+        }
+        
+        .header {
+            margin-bottom: 40px;
+        }
+        
+        h1 {
+            color: #00c3ff;
+            font-size: 2.8rem;
+            margin-bottom: 10px;
+            text-shadow: 0 0 10px rgba(0, 195, 255, 0.5);
+        }
+        
+        .subtitle {
+            color: #8f8f8f;
+            font-size: 1.2rem;
+        }
+        
+        .menu {
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+            margin-top: 30px;
+        }
+        
+        .btn {
+            background: linear-gradient(to right, #1e3c72, #2a5298);
+            color: white;
+            border: none;
+            padding: 22px 30px;
+            font-size: 1.4rem;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: left;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+        
+        .btn:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
+            background: linear-gradient(to right, #2a5298, #1e3c72);
+        }
+        
+        .btn:active {
+            transform: translateY(-2px);
+        }
+        
+        .btn::after {
+            content: '→';
+            position: absolute;
+            right: 25px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 1.6rem;
+            opacity: 0.8;
+        }
+        
+        .btn-1 {
+            background: linear-gradient(to right, #3498db, #2980b9);
+        }
+        
+        .btn-1:hover {
+            background: linear-gradient(to right, #2980b9, #3498db);
+        }
+        
+        .btn-2 {
+            background: linear-gradient(to right, #9b59b6, #8e44ad);
+        }
+        
+        .btn-2:hover {
+            background: linear-gradient(to right, #8e44ad, #9b59b6);
+        }
+        
+        .btn-3 {
+            background: linear-gradient(to right, #2ecc71, #27ae60);
+        }
+        
+        .btn-3:hover {
+            background: linear-gradient(to right, #27ae60, #2ecc71);
+        }
+        
+        .footer {
+            margin-top: 50px;
+            color: #555;
+            font-size: 0.9rem;
+        }
+        
+        /* Адаптивность */
+        @media (max-width: 600px) {
+            h1 {
+                font-size: 2rem;
+            }
+            
+            .btn {
+                padding: 18px 20px;
+                font-size: 1.2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Portal 2 Flash</h1>
+            <p class="subtitle">Выберите режим игры</p>
+        </div>
+        
+        <div class="menu">
+            <button class="btn btn-1" onclick="window.location.href='Portal 2 Flash(Загрузка пользовательских уровней).html'">
+                Portal 2 Flash (Загрузка пользовательских уровней)
+            </button>
+            
+            <button class="btn btn-2" onclick="window.location.href='Portal 2 Flash(Редактор уровней).html'">
+                Portal 2 Flash (Редактор уровней)
+            </button>
+            
+            <button class="btn btn-3" onclick="window.location.href='Портал 2 Flash.html'">
+                Портал 2 Flash
+            </button>
+        </div>
+        
+        <div class="footer">
+            <p>Нажмите на кнопку для перехода в выбранный режим</p>
+        </div>
+    </div>
+</body>
+</html>
